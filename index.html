@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Panel Envíos</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                        dark: { 900: '#000000', 800: '#111111', 700: '#222222', 600: '#333333' }
+                    },
+                    fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { 
+            font-family: '-apple-system', 'BlinkMacSystemFont', 'Inter', sans-serif;
+            background-color: #000000;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden; 
+        }
+        
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animaciones */
+        .view-section { 
+            display: none; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .view-section.active { display: block; opacity: 1; transform: translateY(0); }
+
+        input, select { 
+            background-color: #111111 !important; color: white !important; border: 1px solid #333333 !important;
+        }
+        input:focus, select:focus {
+            border-color: #38bdf8 !important; box-shadow: 0 0 0 1px #38bdf8 !important;
+        }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; margin: 0; 
+        }
+        
+        /* Dock Glassmorphism */
+        .ios-dock {
+            background: rgba(17, 17, 17, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item.active { color: #38bdf8; }
+        .nav-item .active-dot { opacity: 0; transform: translateY(5px); transition: all 0.2s ease; }
+        .nav-item.active .active-dot { opacity: 1; transform: translateY(0); }
+
+        /* Acordeón y Formularios Toggleables */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-content.open { max-height: 2000px; }
+        .accordion-icon { transition: transform 0.3s; }
+        .accordion-icon.open { transform: rotate(180deg); }
+
+        .form-collapse { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), opacity 0.3s ease; opacity: 0; }
+        .form-collapse.open { max-height: 1000px; opacity: 1; transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out; }
+
+        /* Animación de Éxito */
+        #success-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        #success-overlay.active { opacity: 1; pointer-events: auto; }
+        .checkmark-circle {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: #0ea5e9; display: flex; align-items: center; justify-content: center;
+            transform: scale(0); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #success-overlay.active .checkmark-circle { transform: scale(1); }
+        .checkmark-icon { color: white; font-size: 45px; }
+    </style>
+</head>
+<body class="text-slate-200 h-screen flex flex-col">
+
+    <!-- HEADER: Name (Left) | Clock (Right) -->
+    <header class="flex items-center justify-between pt-6 pb-4 px-6 z-20 shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center">
+                <i class="ph-fill ph-paper-plane-tilt text-brand-400 text-xl"></i>
+            </div>
+            <span class="font-bold text-xl text-white tracking-tight">Panel Envíos</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="live-clock" class="text-[11px] text-slate-300 font-mono tracking-widest bg-dark-800 px-3 py-1.5 rounded-full border border-dark-600">
+                --:--:--
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto w-full px-4 md:px-8 pb-36 relative z-10">
+        <div class="max-w-4xl mx-auto">
+            
+            <!-- VISTA: DASHBOARD -->
+            <section id="view-dashboard" class="view-section active">
+                
+                <div id="dash-start-week" class="hidden mb-6 bg-brand-500/10 border border-brand-500/30 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400">
+                            <i class="ph-fill ph-lock-key text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-brand-400 text-lg">Semana Cerrada</h3>
+                            <p class="text-sm text-slate-400">Inicia una nueva semana para operar.</p>
+                        </div>
+                    </div>
+                    <button onclick="window.app.iniciarSemana()" class="w-full sm:w-auto bg-brand-500 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-power"></i> Iniciar Semana
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-dark-800 p-6 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
+                        <i class="ph-fill ph-coins text-emerald-400 text-3xl mb-2"></i>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">CUP Vendidos</h3>
+                        <h2 id="dash-cup-hoy" class="text-2xl font-bold text-white">0</h2>
+                    </div>
+                    <div class="bg-dark-800 p-6 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
+                        <i class="ph-fill ph-wallet text-brand-400 text-3xl mb-2"></i>
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Deuda Proveedores</h3>
+                        <h2 id="dash-usdt-hoy" class="text-2xl font-bold text-white">$0.00</h2>
+                    </div>
+                </div>
+
+                <h2 class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest pl-1">Tasas Activas (CUP/USDT)</h2>
+                <div id="dash-prov-rates" class="flex flex-wrap gap-3 mb-8"></div>
+                
+                <h2 class="text-lg font-bold text-white mb-3 pl-1">Actividad Reciente</h2>
+                <div class="bg-dark-800 rounded-3xl border border-dark-600 overflow-hidden">
+                    <div id="dash-recent-list" class="divide-y divide-dark-600"></div>
+                </div>
+            </section>
+
+            <!-- VISTA: TAQUILLEROS -->
+            <section id="view-taquilleros" class="view-section">
+                <div class="flex justify-between items-end mb-6 pl-1 pr-1">
+                    <h1 class="text-2xl font-bold text-white">Taquilleros</h1>
+                    <button onclick="window.app.toggleForm('form-collapse-taq')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <i class="ph-bold ph-plus"></i> Añadir
+                    </button>
+                </div>
+                
+                <div id="form-collapse-taq" class="form-collapse mb-6">
+                    <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <h2 class="text-lg font-bold text-white mb-4" id="taq-form-title">Añadir Taquillero</h2>
+                        <input type="hidden" id="taq-id">
+                        <div class="space-y-4 mb-4">
+                            <input type="text" id="taq-nombre" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Nombre completo">
+                            <div class="grid grid-cols-2 gap-4">
+                                <select id="taq-moneda" class="w-full rounded-xl px-4 py-3 outline-none appearance-none">
+                                    <option value="GYD">GYD</option>
+                                    <option value="USD">USD</option>
+                                </select>
+                                <input type="text" id="taq-telefono" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Teléfono (Opc.)">
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="window.app.saveTaquillero()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
+                            <button onclick="window.app.resetTaqForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-taq">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="taq-list" class="space-y-3"></div>
+            </section>
+
+            <!-- VISTA: PROVEEDORES -->
+            <section id="view-proveedores" class="view-section">
+                <div class="flex justify-between items-end mb-6 pl-1 pr-1">
+                    <h1 class="text-2xl font-bold text-white">Proveedores</h1>
+                    <button onclick="window.app.toggleForm('form-collapse-prov')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <i class="ph-bold ph-plus"></i> Añadir
+                    </button>
+                </div>
+
+                <div id="form-collapse-prov" class="form-collapse mb-6">
+                    <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <h2 class="text-lg font-bold text-white mb-4" id="prov-form-title">Añadir Proveedor</h2>
+                        <input type="hidden" id="prov-id">
+                        <div class="space-y-4 mb-4">
+                            <input type="text" id="prov-nombre" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Nombre (Ej. Casa Cambio)">
+                            <input type="number" id="prov-tasa" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Tasa (Ej. 350)" step="0.01">
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="window.app.saveProveedor()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
+                            <button onclick="window.app.resetProvForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-prov">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="prov-list" class="space-y-3"></div>
+            </section>
+
+            <!-- VISTA: OPERAR -->
+            <section id="view-operar" class="view-section">
+                <h1 class="text-2xl font-bold text-white mb-2 pl-1">Punto de Venta</h1>
+                <p class="text-slate-400 mb-6 text-sm pl-1">Registra las asignaciones a taquilleros.</p>
+                
+                <div id="op-closed-msg" class="hidden bg-dark-800 p-8 rounded-3xl border border-dark-600 text-center">
+                    <i class="ph-fill ph-lock-key text-5xl text-slate-500 mb-4 inline-block"></i>
+                    <h2 class="text-xl font-bold text-white mb-2">Semana Cerrada</h2>
+                    <p class="text-slate-400 mb-6">Inicia la semana desde el Inicio para registrar operaciones.</p>
+                    <button onclick="window.app.navigate('dashboard')" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform">Ir al Inicio</button>
+                </div>
+
+                <div id="op-form-container" class="bg-dark-800 p-6 rounded-3xl border border-dark-600 mb-8 shadow-xl">
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Taquillero</label>
+                                <select id="op-taquillero" class="w-full rounded-xl px-4 py-3 appearance-none outline-none font-medium text-sm text-slate-500" onchange="window.app.handleOperarSelects()"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-brand-400 mb-1.5 uppercase tracking-wider">Proveedor</label>
+                                <select id="op-proveedor" class="w-full rounded-xl px-4 py-3 appearance-none outline-none font-medium text-sm border-brand-500/30 text-slate-500" onchange="window.app.handleOperarSelects()"></select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Tarjeta Adquirida</label>
+                            <div class="relative">
+                                <i class="ph ph-cards absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                                <select id="op-tarjeta" class="w-full rounded-2xl pl-12 pr-4 py-3.5 appearance-none outline-none font-bold text-lg text-slate-500" onchange="window.app.calculateOperation()" disabled>
+                                    <option value="" disabled selected>Selecciona arriba primero</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="op-preview-container" class="mt-6 p-5 bg-[#0a0a0a] rounded-2xl border border-dark-600 hidden opacity-0 transition-opacity duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-slate-500 text-xs font-semibold">Taq. Paga (GYD)</span>
+                            <span id="op-preview-debt" class="text-lg font-bold text-white">0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-dark-700">
+                            <span class="text-slate-500 text-[10px] font-bold tracking-widest uppercase text-brand-400">Destino Recibe</span>
+                            <span id="op-preview-cup" class="text-xl font-bold text-emerald-400">0 CUP</span>
+                        </div>
+                    </div>
+
+                    <button id="btn-submit-op" onclick="window.app.submitOperation()" class="w-full mt-6 bg-brand-500 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-lg opacity-50 cursor-not-allowed" disabled>
+                        <i class="ph-fill ph-check-circle text-xl"></i> Procesar Venta
+                    </button>
+                </div>
+            </section>
+
+            <!-- VISTA: TARJETAS -->
+            <section id="view-tarjetas" class="view-section">
+                <div class="flex justify-between items-end mb-6 pl-1 pr-1">
+                    <h1 class="text-2xl font-bold text-white">Tarjetas</h1>
+                    <button onclick="window.app.toggleForm('form-collapse-tar')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <i class="ph-bold ph-plus"></i> Añadir
+                    </button>
+                </div>
+
+                <div id="form-collapse-tar" class="form-collapse mb-6">
+                    <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <h2 class="text-lg font-bold text-white mb-4" id="tar-form-title">Añadir Tarjeta</h2>
+                        <input type="hidden" id="tar-id">
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Monto de la Tarjeta (GYD)</label>
+                                <input type="number" id="tar-monto" class="w-full rounded-xl px-4 py-3 outline-none font-bold text-lg" placeholder="Ej. 5000">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-brand-400 mb-1 block">Taq. Paga (GYD)</label>
+                                    <input type="number" id="tar-cobro" class="w-full rounded-xl px-4 py-3 outline-none text-brand-400 font-semibold" placeholder="Ej. 4500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-emerald-500 mb-1 block">Recibe (CUP)</label>
+                                    <input type="number" id="tar-entrega" class="w-full rounded-xl px-4 py-3 outline-none text-emerald-400 font-semibold" placeholder="Ej. 10600">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="window.app.saveTarjeta()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
+                            <button onclick="window.app.resetTarForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-tar">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="tar-list" class="space-y-3"></div>
+            </section>
+
+            <!-- VISTA: BALANCE -->
+            <section id="view-balance" class="view-section">
+                <div class="flex justify-between items-end mb-6">
+                    <h1 class="text-2xl font-bold text-white pl-1">Balances</h1>
+                    <button id="btn-cierre-semanal" onclick="window.app.cierreSemanal()" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm shadow-lg shadow-red-500/20">
+                        <i class="ph-bold ph-lock-key"></i> Cerrar Semana
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3 pl-1">
+                        <h3 class="text-brand-400 font-bold text-sm uppercase tracking-widest"><i class="ph-fill ph-calendar-blank mr-1"></i> Semana Actual</h3>
+                        <button onclick="window.app.exportGlobalBalance()" class="text-xs font-bold text-slate-300 bg-dark-700 px-3 py-1 rounded-lg hover:bg-dark-600"><i class="ph-bold ph-export mr-1"></i> Exportar</button>
+                    </div>
+                    <div class="bg-dark-800 rounded-3xl border border-dark-600 overflow-hidden">
+                        <div id="balance-list" class="divide-y divide-dark-600"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-slate-400 font-bold mb-3 pl-1 text-sm uppercase tracking-widest"><i class="ph-fill ph-books mr-1"></i> Archivo Histórico</h3>
+                    <div id="historial-acordeon" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <!-- VISTA: AJUSTES (Para el nuevo botón del Dock) -->
+            <section id="view-ajustes" class="view-section">
+                <h1 class="text-2xl font-bold text-white mb-6 pl-1">Ajustes</h1>
+                <div class="bg-dark-800 p-8 rounded-3xl border border-dark-600 text-center text-slate-500">
+                    <i class="ph-fill ph-gear-six text-5xl mb-4 inline-block opacity-50"></i>
+                    <h2 class="text-lg font-bold text-slate-300 mb-2">Configuración</h2>
+                    <p class="text-sm">Opciones de configuración general en futuras actualizaciones.</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- DOCK SIMÉTRICO Y CENTRADO (7 Botones) -->
+    <!-- Diseño: Izq(Inicio, Taq, Tarjetas) | Centro(Operar) | Der(Prov, Balance, Ajustes) -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 ios-dock rounded-[2rem] px-2 py-2 z-50 flex items-center justify-between w-[98%] max-w-[440px] shadow-2xl">
+        
+        <!-- Izquierda -->
+        <button onclick="window.app.navigate('dashboard')" data-nav="dashboard" class="nav-item active flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-house text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+        <button onclick="window.app.navigate('taquilleros')" data-nav="taquilleros" class="nav-item flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-users text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+        <button onclick="window.app.navigate('tarjetas')" data-nav="tarjetas" class="nav-item flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-cards text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+        
+        <!-- OPERAR EN EL CENTRO EXACTO -->
+        <div class="relative w-12 h-10 sm:w-14 sm:h-12 flex justify-center mx-1">
+            <button onclick="window.app.navigate('operar')" data-nav="operar" class="absolute -top-4 sm:-top-5 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-500 text-white shadow-[0_8px_20px_rgba(14,165,233,0.4)] active:scale-95 transition-transform border-[4px] border-[#000000] flex items-center justify-center">
+                <i class="ph-fill ph-lightning text-2xl sm:text-3xl"></i>
+            </button>
+        </div>
+
+        <!-- Derecha -->
+        <button onclick="window.app.navigate('proveedores')" data-nav="proveedores" class="nav-item flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-truck text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+        <button onclick="window.app.navigate('balance')" data-nav="balance" class="nav-item flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-receipt text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+        <button onclick="window.app.navigate('ajustes')" data-nav="ajustes" class="nav-item flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
+            <i class="ph-fill ph-gear text-[22px]"></i>
+            <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
+        </button>
+    </nav>
+
+    <!-- UTILIDADES Y MODALES -->
+    <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 pointer-events-none w-[90%] max-w-sm"></div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-dark-800 border border-dark-600 rounded-3xl w-[85%] max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="confirm-box">
+            <div class="p-6 text-center">
+                <i class="ph-fill ph-warning-circle text-4xl text-brand-500 mb-3 mx-auto"></i>
+                <h3 class="text-white font-bold text-lg mb-2" id="confirm-title">¿Confirmar?</h3>
+                <p class="text-slate-400 text-sm" id="confirm-msg">Mensaje</p>
+            </div>
+            <div class="flex border-t border-dark-600">
+                <button id="btn-confirm-cancel" class="flex-1 py-4 text-slate-400 font-semibold border-r border-dark-600 hover:bg-dark-700">Cancelar</button>
+                <button id="btn-confirm-ok" class="flex-1 py-4 text-brand-400 font-bold hover:bg-dark-700">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-overlay" class="flex justify-center items-center h-screen">
+        <div class="flex flex-col items-center">
+            <div class="checkmark-circle"><i class="ph-bold ph-check checkmark-icon"></i></div>
+            <p class="text-white font-bold mt-4 text-xl tracking-wide shadow-black drop-shadow-md">Registrado</p>
+        </div>
+    </div>
+
+    <!-- SCRIPT PRINCIPAL -->
+    <script>
+        class PanelEnviosApp {
+            constructor() {
+                this.state = JSON.parse(localStorage.getItem('panel_envios_db_v6')) || {
+                    semanaActiva: true,
+                    taquilleros: [],
+                    proveedores: [],
+                    tarjetas: [],
+                    transacciones: [],
+                    historialCierres: {} 
+                };
+                
+                if (typeof this.state.semanaActiva === 'undefined') this.state.semanaActiva = true;
+
+                this.confirmCallback = null;
+                this.audioCtx = null;
+                this.initApp();
+            }
+
+            initApp() {
+                this.setupConfirmModal();
+                this.startClock();
+                this.navigate('dashboard');
+                this.renderAll();
+            }
+
+            saveDB() {
+                localStorage.setItem('panel_envios_db_v6', JSON.stringify(this.state));
+                this.renderAll();
+            }
+
+            getFullTimestamp() {
+                const now = new Date();
+                return {
+                    dateStr: now.toLocaleDateString('es-ES'),
+                    timeStr: now.toLocaleTimeString('es-ES'), 
+                    iso: now.toISOString()
+                };
+            }
+
+            // --- UI HELPERS ---
+            toast(msg, type = 'success') {
+                const bg = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-brand-500';
+                const icon = type === 'success' ? 'ph-check-circle' : type === 'error' ? 'ph-warning-circle' : 'ph-info';
+                const t = document.createElement('div');
+                t.className = `${bg} text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform -translate-y-full opacity-0 transition-all duration-300 pointer-events-auto border border-white/10`;
+                t.innerHTML = `<i class="ph-fill ${icon} text-xl"></i> <span class="font-medium text-sm">${msg}</span>`;
+                
+                document.getElementById('toast-container').appendChild(t);
+                setTimeout(() => { t.classList.remove('-translate-y-full', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); }, 10);
+                setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('-translate-y-full', 'opacity-0'); setTimeout(()=>t.remove(), 300); }, 2500);
+            }
+
+            setupConfirmModal() {
+                const modal = document.getElementById('confirm-modal');
+                const box = document.getElementById('confirm-box');
+                
+                document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
+                    box.classList.replace('scale-100', 'scale-95');
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => modal.classList.add('hidden'), 200);
+                });
+
+                document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+                    box.classList.replace('scale-100', 'scale-95');
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => modal.classList.add('hidden'), 200);
+                    if(this.confirmCallback) this.confirmCallback();
+                });
+            }
+
+            showConfirm(title, msg, callback) {
+                document.getElementById('confirm-title').innerText = title;
+                document.getElementById('confirm-msg').innerText = msg;
+                this.confirmCallback = callback;
+                
+                const modal = document.getElementById('confirm-modal');
+                const box = document.getElementById('confirm-box');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    box.classList.replace('scale-95', 'scale-100');
+                }, 10);
+            }
+
+            startClock() {
+                const clockEl = document.getElementById('live-clock');
+                setInterval(() => {
+                    const now = new Date();
+                    clockEl.innerText = now.toLocaleTimeString('es-ES', { hour12: false });
+                }, 1000);
+            }
+
+            playSuccessSound() {
+                try {
+                    if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = this.audioCtx.createOscillator();
+                    const gainNode = this.audioCtx.createGain();
+                    osc.type = 'sine'; osc.connect(gainNode); gainNode.connect(this.audioCtx.destination);
+                    osc.frequency.setValueAtTime(880, this.audioCtx.currentTime); 
+                    osc.frequency.setValueAtTime(1108.73, this.audioCtx.currentTime + 0.1); 
+                    gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, this.audioCtx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3);
+                    osc.start(this.audioCtx.currentTime);
+                    osc.stop(this.audioCtx.currentTime + 0.3);
+                } catch(e) {}
+            }
+
+            showSuccessAnimation() {
+                this.playSuccessSound();
+                const overlay = document.getElementById('success-overlay');
+                overlay.classList.add('active');
+                setTimeout(() => overlay.classList.remove('active'), 1200);
+            }
+
+            navigate(viewId) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const activeBtn = document.querySelector(`[data-nav="${viewId}"]`);
+                if(activeBtn) activeBtn.classList.add('active');
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if(viewId === 'operar') this.resetOperarView();
+            }
+
+            toggleAccordion(mes) {
+                const content = document.getElementById(`acc-content-${mes}`);
+                const icon = document.getElementById(`acc-icon-${mes}`);
+                content.classList.toggle('open');
+                icon.classList.toggle('open');
+            }
+
+            toggleForm(formId) {
+                const el = document.getElementById(formId);
+                el.classList.toggle('open');
+            }
+
+            // --- CIERRES ---
+            iniciarSemana() {
+                this.state.semanaActiva = true;
+                this.saveDB();
+                this.toast('¡Semana Abierta! Ya puedes operar.', 'success');
+            }
+
+            cierreSemanal() {
+                if(this.state.transacciones.length === 0) return this.toast('Semana limpia, no hay nada que cerrar', 'info');
+
+                this.showConfirm("Cierre Semanal", "Se exportará el balance y la semana quedará CERRADA hasta que inicies la próxima.", () => {
+                    const ts = this.getFullTimestamp();
+                    const mesKey = `${ts.iso.substring(0, 7)}`; 
+                    
+                    if(!this.state.historialCierres[mesKey]) this.state.historialCierres[mesKey] = [];
+                    const idCierre = `W-${Date.now()}`;
+                    
+                    this.exportGlobalBalance(this.state.transacciones, `Cierre_Semanal_${ts.dateStr.replace(/\//g,'-')}.txt`, ts);
+
+                    this.state.historialCierres[mesKey].push({
+                        idCierre: idCierre,
+                        fechaCierre: ts.dateStr,
+                        horaCierre: ts.timeStr,
+                        operaciones: [...this.state.transacciones]
+                    });
+
+                    this.state.transacciones = [];
+                    this.state.semanaActiva = false;
+                    this.saveDB();
+                    this.toast('Semana Cerrada y Archivada');
+                    this.navigate('dashboard');
+                });
+            }
+
+            // --- EXPORTACIONES ---
+            exportGlobalBalance(ops = this.state.transacciones, filename = 'Balance.txt', customTs = null) {
+                if(ops.length === 0) return this.toast('No hay registros', 'error');
+                const ts = customTs || this.getFullTimestamp();
+
+                let totalCUP = ops.filter(o => o.tipo==='venta').reduce((s, op) => s + op.cupEntregado, 0);
+                let totalUSDTDeuda = ops.filter(o => o.tipo==='venta').reduce((s, op) => s + op.usdt, 0);
+                let totalUSDTPagado = ops.filter(o => o.tipo==='pago_prov').reduce((s, op) => s + op.montoPago, 0);
+                let balanceFinalUSDT = totalUSDTDeuda - totalUSDTPagado;
+
+                let txt = `=======================================\n`;
+                txt += `        BALANCE GLOBAL - PANEL ENVÍOS\n`;
+                txt += `=======================================\n`;
+                txt += `Generado el: ${ts.dateStr} a las ${ts.timeStr}\n\n`;
+                
+                txt += `[ RESUMEN DE LA SEMANA ]\n`;
+                txt += `CUP Vendidos Totales: ${totalCUP.toLocaleString('es-ES')} CUP\n`;
+                txt += `Deuda Generada Proveedores: $${totalUSDTDeuda.toFixed(2)} USDT\n`;
+                txt += `Pagos Realizados: $${totalUSDTPagado.toFixed(2)} USDT\n`;
+                txt += `BALANCE PENDIENTE PROV: $${balanceFinalUSDT.toFixed(2)} USDT\n\n`;
+                
+                txt += `[ HISTORIAL EXACTO DE MOVIMIENTOS ]\n`;
+                txt += `---------------------------------------\n`;
+                ops.forEach(op => {
+                    if (op.tipo === 'venta') {
+                        txt += `[${op.fechaStr} ${op.hora}] VENTA: ${op.taquillero} adquirió Tarjeta ${op.tarjeta}\n`;
+                        txt += `  -> Entregó: ${op.cupEntregado.toLocaleString('es-ES')} CUP (Prov: ${op.proveedor} @ ${op.tasaProv})\n`;
+                        txt += `  -> Generó deuda: ${op.deudaGYD.toLocaleString('es-ES')} GYD\n\n`;
+                    } else if (op.tipo === 'pago_prov') {
+                        txt += `[${op.fechaStr} ${op.hora}] PAGO A PROVEEDOR: Se saldó deuda de ${op.proveedor}\n`;
+                        txt += `  -> Monto pagado: $${op.montoPago.toFixed(2)} USDT\n\n`;
+                    }
+                });
+
+                const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob); link.download = filename; link.click();
+            }
+
+            exportHistorical(mesKey, idx) {
+                const cierre = this.state.historialCierres[mesKey][idx];
+                const pseudoTs = { dateStr: cierre.fechaCierre, timeStr: cierre.horaCierre || '00:00:00' };
+                this.exportGlobalBalance(cierre.operaciones, `Archivo_Semana_${cierre.fechaCierre.replace(/\//g,'-')}.txt`, pseudoTs);
+            }
+
+            exportTaqStats(id) {
+                const taq = this.state.taquilleros.find(t => t.id === id);
+                if(!taq) return;
+                const ops = this.state.transacciones.filter(t => t.taquilleroId === id && t.tipo === 'venta');
+                if(ops.length === 0) return this.toast('Sin operaciones', 'error');
+
+                const ts = this.getFullTimestamp();
+                let totalGYD = ops.reduce((sum, op) => sum + op.deudaGYD, 0);
+                let gananciaTaq = ops.reduce((sum, op) => sum + op.gananciaGYD, 0);
+                let totalCUP = ops.reduce((sum, op) => sum + op.cupEntregado, 0);
+                
+                let txt = `=======================================\n`;
+                txt += `      BALANCE INDIVIDUAL: ${taq.nombre.toUpperCase()}\n`;
+                txt += `=======================================\n`;
+                txt += `Generado el: ${ts.dateStr} a las ${ts.timeStr}\n\n`;
+                
+                txt += `[ ESTADO ACTUAL ]\n`;
+                txt += `Total Operaciones: ${ops.length}\n`;
+                txt += `Deuda con Admin: ${totalGYD.toLocaleString('es-ES')} GYD\n`;
+                txt += `Ganancia Taquillero: ${gananciaTaq.toLocaleString('es-ES')} GYD\n`;
+                txt += `CUP Enviado a Destinos: ${totalCUP.toLocaleString('es-ES')} CUP\n\n`;
+                
+                txt += `[ DESGLOSE DE OPERACIONES ]\n`;
+                txt += `---------------------------------------\n`;
+                ops.forEach(op => {
+                    txt += `[${op.fechaStr} ${op.hora}] Tarjeta ${op.tarjeta} -> Deuda Generada: ${op.deudaGYD.toLocaleString('es-ES')} GYD (Su ganancia: ${op.gananciaGYD})\n`;
+                });
+                
+                const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob); link.download = `Reporte_${taq.nombre.replace(/\s+/g, '_')}_${ts.dateStr.replace(/\//g,'-')}.txt`; link.click();
+            }
+
+            // --- TAQUILLEROS (CRUD) ---
+            saveTaquillero() {
+                const id = document.getElementById('taq-id').value;
+                const nombre = document.getElementById('taq-nombre').value.trim();
+                const moneda = document.getElementById('taq-moneda').value;
+                const telefono = document.getElementById('taq-telefono').value.trim();
+                if(!nombre) return this.toast('Falta el nombre', 'error');
+                if (id) {
+                    const idx = this.state.taquilleros.findIndex(t => t.id === id);
+                    if(idx !== -1) this.state.taquilleros[idx] = { id, nombre, moneda, telefono };
+                } else {
+                    this.state.taquilleros.push({ id: Date.now().toString(), nombre, moneda, telefono });
+                }
+                this.resetTaqForm(); this.saveDB(); this.toast('Guardado');
+            }
+            editTaquillero(id) {
+                const t = this.state.taquilleros.find(x => x.id === id);
+                if(!t) return;
+                document.getElementById('taq-id').value = t.id; document.getElementById('taq-nombre').value = t.nombre;
+                document.getElementById('taq-moneda').value = t.moneda; document.getElementById('taq-telefono').value = t.telefono;
+                document.getElementById('taq-form-title').innerText = "Editar Taquillero"; document.getElementById('btn-cancel-taq').classList.remove('hidden');
+                document.getElementById('form-collapse-taq').classList.add('open');
+                window.scrollTo({top:0, behavior:'smooth'});
+            }
+            deleteTaquillero(id) {
+                this.showConfirm("Eliminar Taquillero", "Su historial previo se mantiene intacto.", () => {
+                    this.state.taquilleros = this.state.taquilleros.filter(t => t.id !== id);
+                    this.saveDB(); this.toast('Eliminado');
+                });
+            }
+            resetTaqForm() {
+                document.getElementById('taq-id').value = ''; document.getElementById('taq-nombre').value = '';
+                document.getElementById('taq-telefono').value = ''; document.getElementById('taq-form-title').innerText = "Añadir Taquillero";
+                document.getElementById('btn-cancel-taq').classList.add('hidden');
+                document.getElementById('form-collapse-taq').classList.remove('open');
+            }
+
+            // --- PROVEEDORES (CRUD) ---
+            saveProveedor() {
+                const id = document.getElementById('prov-id').value;
+                const nombre = document.getElementById('prov-nombre').value.trim();
+                const tasa = parseFloat(document.getElementById('prov-tasa').value);
+                if(!nombre || isNaN(tasa)) return this.toast('Datos inválidos', 'error');
+                if (id) {
+                    const idx = this.state.proveedores.findIndex(p => p.id === id);
+                    if(idx !== -1) this.state.proveedores[idx] = { ...this.state.proveedores[idx], nombre, tasa };
+                } else {
+                    this.state.proveedores.push({ id: Date.now().toString(), nombre, tasa });
+                }
+                this.resetProvForm(); this.saveDB(); this.toast('Proveedor guardado');
+            }
+            updateProveedorRate(id) {
+                const input = document.getElementById(`rate-prov-${id}`);
+                const newTasa = parseFloat(input.value);
+                if(isNaN(newTasa) || newTasa <= 0) return this.toast('Tasa inválida', 'error');
+                const prov = this.state.proveedores.find(p => p.id === id);
+                this.showConfirm("Actualizar Tasa", `Establecer tasa de ${prov.nombre} a ${newTasa}`, () => {
+                    prov.tasa = newTasa; this.saveDB(); this.toast('Tasa actualizada');
+                });
+            }
+            deleteProveedor(id) {
+                this.showConfirm("Eliminar Proveedor", "¿Seguro de eliminar?", () => {
+                    this.state.proveedores = this.state.proveedores.filter(p => p.id !== id);
+                    this.saveDB();
+                });
+            }
+            resetProvForm() {
+                document.getElementById('prov-id').value = ''; document.getElementById('prov-nombre').value = '';
+                document.getElementById('prov-tasa').value = ''; document.getElementById('prov-form-title').innerText = "Añadir Proveedor";
+                document.getElementById('btn-cancel-prov').classList.add('hidden');
+                document.getElementById('form-collapse-prov').classList.remove('open');
+            }
+            
+            saldarDeudaProveedor(id) {
+                const prov = this.state.proveedores.find(p => p.id === id);
+                if(!prov) return;
+                
+                const ops = this.state.transacciones.filter(t => t.proveedorId === id);
+                const deudaGenerada = ops.filter(t => t.tipo === 'venta').reduce((s, o) => s + o.usdt, 0);
+                const pagado = ops.filter(t => t.tipo === 'pago_prov').reduce((s, o) => s + o.montoPago, 0);
+                const deudaActual = deudaGenerada - pagado;
+
+                if (deudaActual <= 0) return this.toast('No hay deuda pendiente con este proveedor.', 'info');
+
+                this.showConfirm("Saldar Deuda", `¿Confirmas el pago de $${deudaActual.toFixed(2)} USDT a ${prov.nombre}?`, () => {
+                    const ts = this.getFullTimestamp();
+                    this.state.transacciones.push({
+                        id: Date.now().toString(),
+                        tipo: 'pago_prov',
+                        proveedorId: prov.id, proveedor: prov.nombre,
+                        montoPago: deudaActual,
+                        fechaStr: ts.dateStr, hora: ts.timeStr, iso: ts.iso
+                    });
+                    this.saveDB(); this.toast('Deuda Saldada con Éxito');
+                });
+            }
+
+            // --- TARJETAS (CRUD) ---
+            saveTarjeta() {
+                const id = document.getElementById('tar-id').value;
+                const monto = parseFloat(document.getElementById('tar-monto').value);
+                const cobro = parseFloat(document.getElementById('tar-cobro').value);
+                const entrega = parseFloat(document.getElementById('tar-entrega').value);
+                if(isNaN(monto) || isNaN(cobro) || isNaN(entrega)) return this.toast('Faltan datos', 'error');
+                if (id) {
+                    const idx = this.state.tarjetas.findIndex(t => t.id === id);
+                    if(idx !== -1) this.state.tarjetas[idx] = { id, monto, cobro, entregaCUP: entrega };
+                } else {
+                    this.state.tarjetas.push({ id: Date.now().toString(), monto, cobro, entregaCUP: entrega });
+                }
+                this.resetTarForm(); this.saveDB(); this.toast('Guardada');
+            }
+            editTarjeta(id) {
+                const t = this.state.tarjetas.find(x => x.id === id);
+                if(!t) return;
+                document.getElementById('tar-id').value = t.id; document.getElementById('tar-monto').value = t.monto;
+                document.getElementById('tar-cobro').value = t.cobro; document.getElementById('tar-entrega').value = t.entregaCUP;
+                document.getElementById('tar-form-title').innerText = "Editar Tarjeta"; document.getElementById('btn-cancel-tar').classList.remove('hidden');
+                document.getElementById('form-collapse-tar').classList.add('open');
+                window.scrollTo({top:0, behavior:'smooth'});
+            }
+            deleteTarjeta(id) {
+                this.showConfirm("Eliminar", "¿Quitar tarjeta del sistema?", () => {
+                    this.state.tarjetas = this.state.tarjetas.filter(t => t.id !== id);
+                    this.saveDB();
+                });
+            }
+            resetTarForm() {
+                document.getElementById('tar-id').value = ''; document.getElementById('tar-monto').value = '';
+                document.getElementById('tar-cobro').value = ''; document.getElementById('tar-entrega').value = '';
+                document.getElementById('tar-form-title').innerText = "Añadir Tarjeta"; document.getElementById('btn-cancel-tar').classList.add('hidden');
+                document.getElementById('form-collapse-tar').classList.remove('open');
+            }
+
+            // --- OPERAR ---
+            resetOperarView() {
+                const fContainer = document.getElementById('op-form-container');
+                const lockMsg = document.getElementById('op-closed-msg');
+
+                if(!this.state.semanaActiva) {
+                    fContainer.classList.add('hidden'); lockMsg.classList.remove('hidden');
+                    return;
+                } else {
+                    fContainer.classList.remove('hidden'); lockMsg.classList.add('hidden');
+                }
+
+                const selTaq = document.getElementById('op-taquillero');
+                const selProv = document.getElementById('op-proveedor');
+                const selTar = document.getElementById('op-tarjeta');
+                
+                selTaq.value = ""; selProv.value = "";
+                selTar.innerHTML = '<option value="" disabled selected>Seleccione Taq. y Prov.</option>'; selTar.disabled = true;
+                selTaq.classList.add('text-slate-500'); selProv.classList.add('text-slate-500');
+
+                document.getElementById('op-preview-container').classList.add('hidden', 'opacity-0');
+                document.getElementById('btn-submit-op').disabled = true;
+                document.getElementById('btn-submit-op').classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            handleOperarSelects() {
+                const taqId = document.getElementById('op-taquillero').value;
+                const provId = document.getElementById('op-proveedor').value;
+                const selTar = document.getElementById('op-tarjeta');
+                
+                if(taqId) document.getElementById('op-taquillero').classList.remove('text-slate-500');
+                if(provId) document.getElementById('op-proveedor').classList.remove('text-slate-500');
+
+                if (taqId && provId) {
+                    selTar.disabled = false;
+                    selTar.classList.remove('text-slate-500');
+                    if(selTar.options.length <= 1) { 
+                        selTar.innerHTML = '<option value="" disabled selected>Seleccione tarjeta adquirida</option>';
+                        this.state.tarjetas.forEach(t => {
+                            selTar.innerHTML += `<option value="${t.id}">Tarjeta ${t.monto.toLocaleString('es-ES')}</option>`;
+                        });
+                    }
+                }
+                this.calculateOperation();
+            }
+
+            calculateOperation() {
+                const tarId = document.getElementById('op-tarjeta').value;
+                const previewContainer = document.getElementById('op-preview-container');
+                const btnSubmit = document.getElementById('btn-submit-op');
+
+                if(tarId) {
+                    const tarjeta = this.state.tarjetas.find(t => t.id === tarId);
+                    document.getElementById('op-preview-debt').innerText = `${tarjeta.cobro.toLocaleString('es-ES')} GYD`;
+                    document.getElementById('op-preview-cup').innerText = `${tarjeta.entregaCUP.toLocaleString('es-ES')} CUP`;
+                    
+                    previewContainer.classList.remove('hidden');
+                    setTimeout(() => previewContainer.classList.remove('opacity-0'), 10);
+                    btnSubmit.disabled = false; btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    previewContainer.classList.add('hidden', 'opacity-0');
+                    btnSubmit.disabled = true; btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            submitOperation() {
+                if(!this.state.semanaActiva) return this.toast('Semana cerrada', 'error');
+
+                const taqId = document.getElementById('op-taquillero').value;
+                const provId = document.getElementById('op-proveedor').value;
+                const tarId = document.getElementById('op-tarjeta').value;
+                if(!taqId || !provId || !tarId) return this.toast('Faltan campos', 'error');
+
+                const taquillero = this.state.taquilleros.find(t => t.id === taqId);
+                const proveedor = this.state.proveedores.find(p => p.id === provId);
+                const tarjeta = this.state.tarjetas.find(t => t.id === tarId);
+
+                const cupTotal = tarjeta.entregaCUP;
+                const deudaTotal = tarjeta.cobro;
+                const usdtOwed = cupTotal / proveedor.tasa; 
+                const ts = this.getFullTimestamp();
+
+                this.state.transacciones.push({
+                    id: Date.now().toString(),
+                    tipo: 'venta',
+                    iso: ts.iso,
+                    fechaStr: ts.dateStr,
+                    hora: ts.timeStr,
+                    taquilleroId: taquillero.id, taquillero: taquillero.nombre,
+                    proveedorId: proveedor.id, proveedor: proveedor.nombre, tasaProv: proveedor.tasa,
+                    tarjetaId: tarjeta.id, tarjeta: tarjeta.monto.toString(),
+                    deudaGYD: deudaTotal, gananciaGYD: (tarjeta.monto - tarjeta.cobro),
+                    cupEntregado: cupTotal, usdt: usdtOwed
+                });
+
+                this.saveDB();
+                this.showSuccessAnimation();
+                setTimeout(() => this.navigate('dashboard'), 1000);
+            }
+
+            // --- RENDERIZADO ---
+            renderAll() {
+                const renderCard = (html) => `<div class="bg-dark-800 p-4 rounded-3xl border border-dark-600 flex justify-between items-center shadow-md">${html}</div>`;
+
+                // Semana State
+                const btnStartWk = document.getElementById('dash-start-week');
+                const btnCierre = document.getElementById('btn-cierre-semanal');
+                if(!this.state.semanaActiva) {
+                    btnStartWk.classList.remove('hidden');
+                    btnCierre.classList.add('opacity-50', 'cursor-not-allowed');
+                    btnCierre.onclick = () => this.toast('La semana ya está cerrada', 'info');
+                } else {
+                    btnStartWk.classList.add('hidden');
+                    btnCierre.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btnCierre.onclick = () => this.cierreSemanal();
+                }
+
+                // Taquilleros
+                const tt = document.getElementById('taq-list');
+                tt.innerHTML = this.state.taquilleros.length ? '' : '<p class="text-slate-500 text-center py-4 text-sm">Lista vacía</p>';
+                this.state.taquilleros.forEach(t => {
+                    const ops = this.state.transacciones.filter(tr => tr.taquilleroId === t.id && tr.tipo === 'venta');
+                    const deuda = ops.reduce((s, op) => s + op.deudaGYD, 0);
+                    const ganancia = ops.reduce((s, op) => s + op.gananciaGYD, 0);
+                    
+                    tt.innerHTML += renderCard(`
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white text-lg">${t.nombre}</h4>
+                            <div class="flex flex-col gap-0.5 mb-1 text-xs">
+                                <span class="text-brand-400 font-semibold">Deuda: ${deuda.toLocaleString('es-ES')} GYD</span>
+                                <span class="text-emerald-500">Ganancia: +${ganancia.toLocaleString('es-ES')} GYD</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="window.app.exportTaqStats('${t.id}')" class="bg-dark-700 hover:bg-dark-600 text-amber-400 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 justify-center"><i class="ph-bold ph-export"></i> Exportar</button>
+                            <div class="flex gap-2 justify-end">
+                                <button onclick="window.app.editTaquillero('${t.id}')" class="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center text-slate-300"><i class="ph-fill ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteTaquillero('${t.id}')" class="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center text-red-400"><i class="ph-fill ph-trash"></i></button>
+                            </div>
+                        </div>
+                    `);
+                });
+
+                // Proveedores
+                const pt = document.getElementById('prov-list');
+                pt.innerHTML = this.state.proveedores.length ? '' : '<p class="text-slate-500 text-center py-4 text-sm">Lista vacía</p>';
+                this.state.proveedores.forEach(p => {
+                    const ops = this.state.transacciones.filter(tr => tr.proveedorId === p.id);
+                    const generada = ops.filter(t => t.tipo === 'venta').reduce((s, o) => s + o.usdt, 0);
+                    const pagada = ops.filter(t => t.tipo === 'pago_prov').reduce((s, o) => s + o.montoPago, 0);
+                    const deudaReal = generada - pagada;
+
+                    pt.innerHTML += `<div class="bg-dark-800 p-4 rounded-3xl border border-dark-600 mb-3 shadow-md">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-white text-lg">${p.nombre}</h4>
+                                <p class="text-xs text-brand-400 font-semibold">Deuda: $${deudaReal.toFixed(2)} USDT</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="window.app.saldarDeudaProveedor('${p.id}')" class="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 hover:bg-emerald-500/30" title="Saldar Deuda"><i class="ph-bold ph-check text-lg"></i></button>
+                                <button onclick="window.app.deleteProveedor('${p.id}')" class="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center text-red-400"><i class="ph-fill ph-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-2 pt-3 border-t border-dark-700">
+                            <span class="text-xs text-slate-500 font-bold uppercase w-12">TASA:</span>
+                            <input type="number" id="rate-prov-${p.id}" value="${p.tasa}" step="0.01" class="w-full bg-dark-900 rounded-lg px-3 py-1.5 font-bold text-base text-slate-300 outline-none border border-dark-600">
+                            <button onclick="window.app.updateProveedorRate('${p.id}')" class="bg-brand-500 text-white px-4 py-1.5 rounded-lg font-bold flex-shrink-0 active:scale-95 transition-transform text-sm">Actualizar</button>
+                        </div>
+                    </div>`;
+                });
+
+                // Tarjetas
+                const tarT = document.getElementById('tar-list');
+                tarT.innerHTML = this.state.tarjetas.length ? '' : '<p class="text-slate-500 text-center py-4 text-sm">Catálogo vacío</p>';
+                this.state.tarjetas.forEach(t => {
+                    const ganancia = t.monto - t.cobro;
+                    tarT.innerHTML += renderCard(`
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="ph-fill ph-cards text-brand-400 text-xl"></i>
+                                <h4 class="font-bold text-white text-lg">${t.monto.toLocaleString('es-ES')} GYD</h4>
+                            </div>
+                            <div class="flex flex-col gap-1 text-[10px] sm:text-xs">
+                                <span class="text-slate-400">Paga: <b class="text-white">${t.cobro.toLocaleString('es-ES')} GYD</b> <span class="text-emerald-500 ml-1">(+${ganancia.toLocaleString('es-ES')})</span></span>
+                                <span class="text-emerald-500">Recibe: <b class="text-emerald-400">${t.entregaCUP.toLocaleString('es-ES')} CUP</b></span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2 ml-2">
+                            <button onclick="window.app.editTarjeta('${t.id}')" class="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center text-slate-300"><i class="ph-fill ph-pencil-simple"></i></button>
+                            <button onclick="window.app.deleteTarjeta('${t.id}')" class="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center text-red-400"><i class="ph-fill ph-trash"></i></button>
+                        </div>
+                    `);
+                });
+
+                // Operar Selects
+                const selTaq = document.getElementById('op-taquillero');
+                const prevTaqVal = selTaq.value;
+                selTaq.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
+                this.state.taquilleros.forEach(t => selTaq.innerHTML += `<option value="${t.id}">${t.nombre}</option>`);
+                if(prevTaqVal && this.state.taquilleros.find(t=>t.id===prevTaqVal)) selTaq.value = prevTaqVal;
+
+                const selProv = document.getElementById('op-proveedor');
+                const prevProvVal = selProv.value;
+                selProv.innerHTML = '<option value="" disabled selected>Seleccionar...</option>';
+                this.state.proveedores.forEach(p => selProv.innerHTML += `<option value="${p.id}">${p.nombre} (${p.tasa})</option>`);
+                if(prevProvVal && this.state.proveedores.find(p=>p.id===prevProvVal)) selProv.value = prevProvVal;
+                
+                // Dashboard Totales
+                const ventasDashboard = this.state.transacciones.filter(t => t.tipo === 'venta');
+                document.getElementById('dash-cup-hoy').innerText = ventasDashboard.reduce((s, op) => s + op.cupEntregado, 0).toLocaleString('es-ES');
+                
+                let usdtDeuda = ventasDashboard.reduce((s, op) => s + op.usdt, 0);
+                let usdtPagado = this.state.transacciones.filter(t => t.tipo === 'pago_prov').reduce((s, op) => s + op.montoPago, 0);
+                document.getElementById('dash-usdt-hoy').innerText = '$' + (usdtDeuda - usdtPagado).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                const provRatesContainer = document.getElementById('dash-prov-rates');
+                provRatesContainer.innerHTML = '';
+                if(this.state.proveedores.length > 0) {
+                    this.state.proveedores.forEach(p => {
+                        provRatesContainer.innerHTML += `
+                            <div class="bg-dark-800 p-3 rounded-2xl border border-dark-600 flex items-center gap-3 min-w-[130px] flex-1 shadow-md">
+                                <div class="w-10 h-10 rounded-full bg-brand-500/10 text-brand-400 flex items-center justify-center flex-shrink-0">
+                                    <i class="ph-bold ph-trend-up text-lg"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-500 uppercase tracking-wider truncate">${p.nombre}</p>
+                                    <p class="font-bold text-white text-sm">${p.tasa} <span class="text-[10px] text-slate-400 font-normal">CUP/USDT</span></p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    provRatesContainer.innerHTML = `<div class="w-full p-4 text-center text-slate-500 text-sm border border-dashed border-dark-600 rounded-3xl">Sin proveedores activos</div>`;
+                }
+
+                // Balance y Actividad
+                const bList = document.getElementById('balance-list');
+                const dList = document.getElementById('dash-recent-list');
+                
+                bList.innerHTML = this.state.transacciones.length ? '' : '<div class="p-6 text-center text-slate-500">Semana limpia</div>';
+                dList.innerHTML = this.state.transacciones.length ? '' : '<div class="p-6 text-center text-slate-500 text-sm">Sin actividad</div>';
+
+                const renderRow = (op, isDash) => {
+                    if (op.tipo === 'pago_prov') {
+                        return `
+                            <div class="p-4 flex items-center justify-between bg-emerald-900/10">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm"><i class="ph-bold ph-check text-lg"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-white text-sm">Pago de Deuda</h4>
+                                        <p class="text-[10px] text-slate-500">${op.fechaStr} • ${op.proveedor}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-emerald-400 text-sm">-$${op.montoPago.toFixed(2)}</p>
+                                    <p class="text-[10px] text-slate-500 uppercase">${op.hora}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-dark-700 text-slate-300 flex items-center justify-center font-bold text-sm">${op.taquillero.charAt(0)}</div>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm">${op.taquillero}</h4>
+                                    <p class="text-[10px] text-slate-500">${isDash ? 'Adquirió Tarjeta' : op.fechaStr} <span class="text-brand-400 font-bold ml-1">${op.tarjeta}</span></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                ${isDash ? `<p class="text-xs text-slate-400">${op.hora}</p>` : `
+                                    <p class="font-bold text-emerald-400 text-sm">+${op.cupEntregado.toLocaleString('es-ES')}</p>
+                                    <p class="text-[10px] text-slate-500 uppercase tracking-wide">Deuda: ${op.deudaGYD.toLocaleString('es-ES')}</p>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                [...this.state.transacciones].reverse().forEach((op, idx) => {
+                    bList.innerHTML += renderRow(op, false);
+                    if(idx < 5) dList.innerHTML += renderRow(op, true);
+                });
+
+                // Historial Acordeón
+                const histContainer = document.getElementById('historial-acordeon');
+                histContainer.innerHTML = '';
+                const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+                if(Object.keys(this.state.historialCierres).length === 0) {
+                    histContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-sm">No hay cierres archivados.</div>';
+                } else {
+                    const mesesOrdenados = Object.keys(this.state.historialCierres).sort().reverse();
+                    mesesOrdenados.forEach(mesKey => {
+                        const [year, month] = mesKey.split('-');
+                        const nombreMes = `${mesesNombres[parseInt(month)-1]} ${year}`;
+                        const cierresDelMes = this.state.historialCierres[mesKey];
+                        
+                        let cierresHtml = '';
+                        cierresDelMes.reverse().forEach((cierre, index) => {
+                            let totalCUP = cierre.operaciones.filter(o=>o.tipo==='venta').reduce((s,o)=>s+o.cupEntregado, 0);
+                            cierresHtml += `
+                                <div class="bg-dark-900 p-4 rounded-xl mb-2 border border-dark-600">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="text-xs text-slate-400 font-bold">Cierre #${cierresDelMes.length - index}</div>
+                                        <button onclick="window.app.exportHistorical('${mesKey}', ${index})" class="text-brand-400 hover:text-white flex items-center gap-1 text-xs font-bold bg-dark-800 px-2 py-1 rounded"><i class="ph-bold ph-export"></i> Descargar</button>
+                                    </div>
+                                    <div class="flex justify-between items-end">
+                                        <div>
+                                            <p class="text-white font-bold text-sm">${cierre.operaciones.length} Ops.</p>
+                                            <p class="text-[10px] text-slate-500">${cierre.fechaCierre} a las ${cierre.horaCierre}</p>
+                                        </div>
+                                        <span class="text-emerald-400 font-bold text-sm">${totalCUP.toLocaleString('es-ES')} CUP</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        histContainer.innerHTML += `
+                            <div class="bg-dark-800 rounded-2xl border border-dark-600 overflow-hidden shadow-md">
+                                <button onclick="window.app.toggleAccordion('${mesKey}')" class="w-full p-4 flex justify-between items-center text-left hover:bg-dark-700/50 transition-colors">
+                                    <span class="font-bold text-white uppercase text-xs tracking-wider">${nombreMes}</span>
+                                    <i id="acc-icon-${mesKey}" class="ph-bold ph-caret-down text-slate-400 accordion-icon"></i>
+                                </button>
+                                <div id="acc-content-${mesKey}" class="accordion-content px-4 pb-2">
+                                    ${cierresHtml}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        }
+
+        window.app = new PanelEnviosApp();
+    </script>
+</body>
+</html>
