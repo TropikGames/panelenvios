@@ -35,7 +35,24 @@
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Animaciones */
+        /* --- SISTEMA RESPONSIVO BLINDADO (CSS NATIVO) --- */
+        /* Esto garantiza que el escritorio funcione incluso si GitHub bloquea Tailwind */
+        .desktop-sidebar { display: none !important; }
+        .mobile-dock { display: flex !important; }
+        .mobile-header-title { display: flex !important; }
+        .main-wrapper { padding-bottom: 9rem !important; }
+        .desktop-spacer { display: none !important; }
+
+        @media (min-width: 768px) {
+            .desktop-sidebar { display: flex !important; }
+            .mobile-dock { display: none !important; }
+            .mobile-header-title { display: none !important; }
+            .main-wrapper { padding-bottom: 3rem !important; }
+            .desktop-spacer { display: block !important; }
+        }
+        /* ------------------------------------------------ */
+
+        /* Animaciones Vistas */
         .view-section { 
             display: none; opacity: 0; transform: translateY(10px);
             transition: opacity 0.3s ease, transform 0.3s ease;
@@ -52,7 +69,7 @@
             -webkit-appearance: none; margin: 0; 
         }
         
-        /* Dock Mobile y Sidebar Desktop */
+        /* Dock Glassmorphism */
         .ios-dock {
             background: rgba(17, 17, 17, 0.85);
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
@@ -61,20 +78,15 @@
 
         .nav-item { transition: all 0.2s ease; }
         .nav-item.active { color: #38bdf8; }
-        
-        /* Indicador Dock Móvil */
         .nav-item .active-dot { opacity: 0; transform: translateY(5px); transition: all 0.2s ease; }
         .nav-item.active .active-dot { opacity: 1; transform: translateY(0); }
 
-        /* Estilos específicos Sidebar Desktop */
         .sidebar-item { border-right: 3px solid transparent; }
         .sidebar-item.active { 
-            background-color: rgba(56, 189, 248, 0.08); 
-            border-right-color: #38bdf8; 
-            color: #38bdf8; 
+            background-color: rgba(56, 189, 248, 0.08); border-right-color: #38bdf8; color: #38bdf8; 
         }
 
-        /* Acordeón y Formularios Toggleables */
+        /* Acordeón y Formularios */
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .accordion-content.open { max-height: 2000px; }
         .accordion-icon { transition: transform 0.3s; }
@@ -102,8 +114,8 @@
 </head>
 <body class="text-slate-200 h-screen flex flex-col md:flex-row">
 
-    <!-- SIDEBAR ESCRITORIO (Oculto en móviles, visible en md) -->
-    <aside class="hidden md:flex flex-col w-64 lg:w-72 bg-[#080808] border-r border-dark-800 z-30 shrink-0 h-full">
+    <!-- SIDEBAR ESCRITORIO (Controlado por CSS nativo) -->
+    <aside class="desktop-sidebar flex-col w-64 lg:w-72 bg-[#080808] border-r border-dark-800 z-30 shrink-0 h-full">
         <div class="p-6 flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
                 <i class="ph-fill ph-paper-plane-tilt text-brand-400 text-2xl"></i>
@@ -133,7 +145,6 @@
                 <span class="font-medium text-sm">Balances e Historial</span>
             </button>
             
-            <!-- Botón Operar Destacado en el Sidebar -->
             <div class="pt-6 pb-2">
                 <div class="px-4 text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Acciones</div>
                 <button onclick="window.app.navigate('operar')" data-nav="operar" class="nav-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-brand-500 text-white hover:bg-brand-600 transition-transform active:scale-95 shadow-lg shadow-brand-500/20">
@@ -151,20 +162,20 @@
         </div>
     </aside>
 
-    <!-- ENVOLTORIO PRINCIPAL (Para Móvil y Escritorio) -->
+    <!-- ENVOLTORIO PRINCIPAL -->
     <div class="flex-1 flex flex-col w-full h-full relative overflow-hidden">
         
-        <!-- HEADER (Visible completo en móvil, en PC solo el reloj a la derecha) -->
+        <!-- HEADER GENERAL -->
         <header class="flex items-center justify-between pt-6 pb-4 px-6 z-20 shrink-0">
-            <div class="flex items-center gap-2 md:hidden">
+            <div class="mobile-header-title items-center gap-2">
                 <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center">
                     <i class="ph-fill ph-paper-plane-tilt text-brand-400 text-xl"></i>
                 </div>
                 <span class="font-bold text-xl text-white tracking-tight">Panel Envíos</span>
             </div>
             
-            <!-- Espaciador invisible para empujar el reloj a la derecha en PC -->
-            <div class="hidden md:block flex-1"></div>
+            <!-- Espaciador de escritorio (Controlado por CSS nativo) -->
+            <div class="desktop-spacer flex-1"></div>
 
             <div class="flex items-center gap-3">
                 <div id="live-clock" class="text-[11px] text-slate-300 font-mono tracking-widest bg-dark-800 px-3 py-1.5 rounded-full border border-dark-600">
@@ -173,15 +184,15 @@
             </div>
         </header>
 
-        <!-- CONTENIDO DE LAS VISTAS (Padding inferior dinámico) -->
-        <main class="flex-1 overflow-y-auto w-full px-4 md:px-8 pb-36 md:pb-12 relative z-10">
+        <!-- CONTENIDO DE LAS VISTAS (Padding inferior controlado por .main-wrapper) -->
+        <main class="flex-1 overflow-y-auto w-full px-4 md:px-8 main-wrapper relative z-10">
             <div class="max-w-4xl mx-auto">
                 
                 <!-- VISTA: DASHBOARD -->
                 <section id="view-dashboard" class="view-section active">
                     <div id="dash-start-week" class="hidden mb-6 bg-brand-500/10 border border-brand-500/30 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400">
+                            <div class="w-12 h-12 bg-brand-500/20 rounded-full flex items-center justify-center text-brand-400 shrink-0">
                                 <i class="ph-fill ph-lock-key text-2xl"></i>
                             </div>
                             <div>
@@ -194,23 +205,23 @@
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-dark-800 p-6 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
-                            <i class="ph-fill ph-coins text-emerald-400 text-3xl mb-2"></i>
-                            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">CUP Vendidos</h3>
-                            <h2 id="dash-cup-hoy" class="text-2xl font-bold text-white">0</h2>
+                    <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
+                        <div class="bg-dark-800 p-6 md:p-8 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
+                            <i class="ph-fill ph-coins text-emerald-400 text-3xl md:text-4xl mb-3"></i>
+                            <h3 class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">CUP Vendidos</h3>
+                            <h2 id="dash-cup-hoy" class="text-2xl md:text-4xl font-bold text-white">0</h2>
                         </div>
-                        <div class="bg-dark-800 p-6 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
-                            <i class="ph-fill ph-wallet text-brand-400 text-3xl mb-2"></i>
-                            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Deuda Proveedores</h3>
-                            <h2 id="dash-usdt-hoy" class="text-2xl font-bold text-white">$0.00</h2>
+                        <div class="bg-dark-800 p-6 md:p-8 rounded-3xl border border-dark-600 flex flex-col items-center justify-center text-center shadow-lg">
+                            <i class="ph-fill ph-wallet text-brand-400 text-3xl md:text-4xl mb-3"></i>
+                            <h3 class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Deuda Proveedores</h3>
+                            <h2 id="dash-usdt-hoy" class="text-2xl md:text-4xl font-bold text-white">$0.00</h2>
                         </div>
                     </div>
 
-                    <h2 class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest pl-1">Tasas Activas (CUP/USDT)</h2>
-                    <div id="dash-prov-rates" class="flex flex-wrap gap-3 mb-8"></div>
+                    <h2 class="text-xs md:text-sm font-bold text-slate-500 mb-2 md:mb-4 uppercase tracking-widest pl-1">Tasas Activas (CUP/USDT)</h2>
+                    <div id="dash-prov-rates" class="flex flex-wrap gap-3 md:gap-4 mb-8"></div>
                     
-                    <h2 class="text-lg font-bold text-white mb-3 pl-1">Actividad Reciente</h2>
+                    <h2 class="text-lg md:text-xl font-bold text-white mb-3 pl-1">Actividad Reciente</h2>
                     <div class="bg-dark-800 rounded-3xl border border-dark-600 overflow-hidden">
                         <div id="dash-recent-list" class="divide-y divide-dark-600"></div>
                     </div>
@@ -219,112 +230,112 @@
                 <!-- VISTA: TAQUILLEROS -->
                 <section id="view-taquilleros" class="view-section">
                     <div class="flex justify-between items-end mb-6 pl-1 pr-1">
-                        <h1 class="text-2xl font-bold text-white">Taquilleros</h1>
-                        <button onclick="window.app.toggleForm('form-collapse-taq')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">Taquilleros</h1>
+                        <button onclick="window.app.toggleForm('form-collapse-taq')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-4 py-2 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm">
                             <i class="ph-bold ph-plus"></i> Añadir
                         </button>
                     </div>
                     
                     <div id="form-collapse-taq" class="form-collapse mb-6">
-                        <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <div class="bg-dark-800 p-5 md:p-8 rounded-3xl border border-dark-600">
                             <h2 class="text-lg font-bold text-white mb-4" id="taq-form-title">Añadir Taquillero</h2>
                             <input type="hidden" id="taq-id">
-                            <div class="space-y-4 mb-4">
-                                <input type="text" id="taq-nombre" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Nombre completo">
+                            <div class="space-y-4 md:space-y-6 mb-6">
+                                <input type="text" id="taq-nombre" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none border border-dark-600" placeholder="Nombre completo">
                                 <div class="grid grid-cols-2 gap-4">
-                                    <select id="taq-moneda" class="w-full rounded-xl px-4 py-3 outline-none appearance-none">
+                                    <select id="taq-moneda" class="w-full rounded-xl px-4 py-3 outline-none appearance-none border border-dark-600">
                                         <option value="GYD">GYD</option>
                                         <option value="USD">USD</option>
                                     </select>
-                                    <input type="text" id="taq-telefono" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Teléfono (Opc.)">
+                                    <input type="text" id="taq-telefono" class="w-full rounded-xl px-4 py-3 outline-none border border-dark-600" placeholder="Teléfono (Opc.)">
                                 </div>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="window.app.saveTaquillero()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
-                                <button onclick="window.app.resetTaqForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-taq">Cancelar</button>
+                                <button onclick="window.app.saveTaquillero()" class="flex-1 bg-brand-500 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform text-sm md:text-base">Guardar</button>
+                                <button onclick="window.app.resetTaqForm()" class="flex-1 bg-dark-600 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform hidden text-sm md:text-base" id="btn-cancel-taq">Cancelar</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="taq-list" class="space-y-3"></div>
+                    <div id="taq-list" class="space-y-3 md:space-y-4"></div>
                 </section>
 
                 <!-- VISTA: PROVEEDORES -->
                 <section id="view-proveedores" class="view-section">
                     <div class="flex justify-between items-end mb-6 pl-1 pr-1">
-                        <h1 class="text-2xl font-bold text-white">Proveedores</h1>
-                        <button onclick="window.app.toggleForm('form-collapse-prov')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">Proveedores</h1>
+                        <button onclick="window.app.toggleForm('form-collapse-prov')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-4 py-2 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm">
                             <i class="ph-bold ph-plus"></i> Añadir
                         </button>
                     </div>
 
                     <div id="form-collapse-prov" class="form-collapse mb-6">
-                        <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <div class="bg-dark-800 p-5 md:p-8 rounded-3xl border border-dark-600">
                             <h2 class="text-lg font-bold text-white mb-4" id="prov-form-title">Añadir Proveedor</h2>
                             <input type="hidden" id="prov-id">
-                            <div class="space-y-4 mb-4">
-                                <input type="text" id="prov-nombre" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Nombre (Ej. Casa Cambio)">
-                                <input type="number" id="prov-tasa" class="w-full rounded-xl px-4 py-3 outline-none" placeholder="Tasa (Ej. 350)" step="0.01">
+                            <div class="space-y-4 md:space-y-6 mb-6">
+                                <input type="text" id="prov-nombre" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none border border-dark-600" placeholder="Nombre (Ej. Casa Cambio)">
+                                <input type="number" id="prov-tasa" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none border border-dark-600" placeholder="Tasa (Ej. 350)" step="0.01">
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="window.app.saveProveedor()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
-                                <button onclick="window.app.resetProvForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-prov">Cancelar</button>
+                                <button onclick="window.app.saveProveedor()" class="flex-1 bg-brand-500 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform text-sm md:text-base">Guardar</button>
+                                <button onclick="window.app.resetProvForm()" class="flex-1 bg-dark-600 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform hidden text-sm md:text-base" id="btn-cancel-prov">Cancelar</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="prov-list" class="space-y-3"></div>
+                    <div id="prov-list" class="space-y-3 md:space-y-4"></div>
                 </section>
 
                 <!-- VISTA: OPERAR -->
                 <section id="view-operar" class="view-section">
-                    <h1 class="text-2xl font-bold text-white mb-2 pl-1">Punto de Venta</h1>
-                    <p class="text-slate-400 mb-6 text-sm pl-1">Registra las asignaciones a taquilleros.</p>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2 pl-1">Punto de Venta</h1>
+                    <p class="text-slate-400 mb-6 text-sm md:text-base pl-1">Registra las asignaciones a taquilleros.</p>
                     
-                    <div id="op-closed-msg" class="hidden bg-dark-800 p-8 rounded-3xl border border-dark-600 text-center">
-                        <i class="ph-fill ph-lock-key text-5xl text-slate-500 mb-4 inline-block"></i>
-                        <h2 class="text-xl font-bold text-white mb-2">Semana Cerrada</h2>
-                        <p class="text-slate-400 mb-6">Inicia la semana desde el Inicio para registrar operaciones.</p>
-                        <button onclick="window.app.navigate('dashboard')" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform">Ir al Inicio</button>
+                    <div id="op-closed-msg" class="hidden bg-dark-800 p-8 md:p-12 rounded-3xl border border-dark-600 text-center">
+                        <i class="ph-fill ph-lock-key text-5xl md:text-7xl text-slate-500 mb-4 inline-block"></i>
+                        <h2 class="text-xl md:text-2xl font-bold text-white mb-2">Semana Cerrada</h2>
+                        <p class="text-slate-400 mb-6 max-w-md mx-auto">Inicia la semana desde la pantalla de Inicio para habilitar el registro de operaciones.</p>
+                        <button onclick="window.app.navigate('dashboard')" class="bg-brand-500 text-white px-8 py-4 rounded-xl font-bold active:scale-95 transition-transform text-lg">Ir al Inicio</button>
                     </div>
 
-                    <div id="op-form-container" class="bg-dark-800 p-6 rounded-3xl border border-dark-600 mb-8 shadow-xl">
-                        <div class="space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="op-form-container" class="bg-dark-800 p-6 md:p-10 rounded-3xl border border-dark-600 mb-8 shadow-xl max-w-2xl mx-auto">
+                        <div class="space-y-6 md:space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Taquillero</label>
-                                    <select id="op-taquillero" class="w-full rounded-xl px-4 py-3 appearance-none outline-none font-medium text-sm text-slate-500" onchange="window.app.handleOperarSelects()"></select>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Taquillero</label>
+                                    <select id="op-taquillero" class="w-full rounded-xl px-4 py-4 appearance-none outline-none font-medium text-base text-slate-500 border border-dark-600" onchange="window.app.handleOperarSelects()"></select>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-brand-400 mb-1.5 uppercase tracking-wider">Proveedor</label>
-                                    <select id="op-proveedor" class="w-full rounded-xl px-4 py-3 appearance-none outline-none font-medium text-sm border-brand-500/30 text-slate-500" onchange="window.app.handleOperarSelects()"></select>
+                                    <label class="block text-[11px] font-bold text-brand-400 mb-2 uppercase tracking-wider">Proveedor</label>
+                                    <select id="op-proveedor" class="w-full rounded-xl px-4 py-4 appearance-none outline-none font-medium text-base border-brand-500/30 text-slate-500" onchange="window.app.handleOperarSelects()"></select>
                                 </div>
                             </div>
                             
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Tarjeta Adquirida</label>
+                                <label class="block text-[11px] font-bold text-slate-300 mb-2 uppercase tracking-wider">Tarjeta Adquirida</label>
                                 <div class="relative">
-                                    <i class="ph ph-cards absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                                    <select id="op-tarjeta" class="w-full rounded-2xl pl-12 pr-4 py-3.5 appearance-none outline-none font-bold text-lg text-slate-500" onchange="window.app.calculateOperation()" disabled>
+                                    <i class="ph ph-cards absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
+                                    <select id="op-tarjeta" class="w-full rounded-2xl pl-12 pr-4 py-4 md:py-5 appearance-none outline-none font-bold text-lg md:text-xl text-slate-500 border border-dark-600" onchange="window.app.calculateOperation()" disabled>
                                         <option value="" disabled selected>Selecciona arriba primero</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="op-preview-container" class="mt-6 p-5 bg-[#0a0a0a] rounded-2xl border border-dark-600 hidden opacity-0 transition-opacity duration-300">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-slate-500 text-xs font-semibold">Taq. Paga (GYD)</span>
-                                <span id="op-preview-debt" class="text-lg font-bold text-white">0</span>
+                        <div id="op-preview-container" class="mt-8 p-6 bg-[#0a0a0a] rounded-2xl border border-dark-600 hidden opacity-0 transition-opacity duration-300">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-slate-500 text-sm md:text-base font-semibold">Taq. Paga (GYD)</span>
+                                <span id="op-preview-debt" class="text-xl md:text-2xl font-bold text-white">0</span>
                             </div>
-                            <div class="flex justify-between items-center pt-3 border-t border-dark-700">
-                                <span class="text-slate-500 text-[10px] font-bold tracking-widest uppercase text-brand-400">Destino Recibe</span>
-                                <span id="op-preview-cup" class="text-xl font-bold text-emerald-400">0 CUP</span>
+                            <div class="flex justify-between items-center pt-4 border-t border-dark-700">
+                                <span class="text-slate-500 text-xs md:text-sm font-bold tracking-widest uppercase text-brand-400">Destino Recibe</span>
+                                <span id="op-preview-cup" class="text-2xl md:text-3xl font-bold text-emerald-400">0 CUP</span>
                             </div>
                         </div>
 
-                        <button id="btn-submit-op" onclick="window.app.submitOperation()" class="w-full mt-6 bg-brand-500 text-white font-bold py-4 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-lg opacity-50 cursor-not-allowed" disabled>
-                            <i class="ph-fill ph-check-circle text-xl"></i> Procesar Venta
+                        <button id="btn-submit-op" onclick="window.app.submitOperation()" class="w-full mt-8 bg-brand-500 text-white font-bold py-5 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-xl opacity-50 cursor-not-allowed" disabled>
+                            <i class="ph-fill ph-check-circle text-2xl"></i> Procesar Venta
                         </button>
                     </div>
                 </section>
@@ -332,54 +343,54 @@
                 <!-- VISTA: TARJETAS -->
                 <section id="view-tarjetas" class="view-section">
                     <div class="flex justify-between items-end mb-6 pl-1 pr-1">
-                        <h1 class="text-2xl font-bold text-white">Tarjetas</h1>
-                        <button onclick="window.app.toggleForm('form-collapse-tar')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-transform flex items-center gap-1 text-xs">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">Tarjetas</h1>
+                        <button onclick="window.app.toggleForm('form-collapse-tar')" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-4 py-2 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm">
                             <i class="ph-bold ph-plus"></i> Añadir
                         </button>
                     </div>
 
                     <div id="form-collapse-tar" class="form-collapse mb-6">
-                        <div class="bg-dark-800 p-5 rounded-3xl border border-dark-600">
+                        <div class="bg-dark-800 p-5 md:p-8 rounded-3xl border border-dark-600">
                             <h2 class="text-lg font-bold text-white mb-4" id="tar-form-title">Añadir Tarjeta</h2>
                             <input type="hidden" id="tar-id">
-                            <div class="space-y-4 mb-4">
+                            <div class="space-y-4 md:space-y-6 mb-6">
                                 <div>
-                                    <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Monto de la Tarjeta (GYD)</label>
-                                    <input type="number" id="tar-monto" class="w-full rounded-xl px-4 py-3 outline-none font-bold text-lg" placeholder="Ej. 5000">
+                                    <label class="text-[11px] uppercase font-bold text-slate-500 mb-2 block">Monto de la Tarjeta (GYD)</label>
+                                    <input type="number" id="tar-monto" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none font-bold text-lg border border-dark-600" placeholder="Ej. 5000">
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="text-[10px] uppercase font-bold text-brand-400 mb-1 block">Taq. Paga (GYD)</label>
-                                        <input type="number" id="tar-cobro" class="w-full rounded-xl px-4 py-3 outline-none text-brand-400 font-semibold" placeholder="Ej. 4500">
+                                        <label class="text-[11px] uppercase font-bold text-brand-400 mb-2 block">Taq. Paga (GYD)</label>
+                                        <input type="number" id="tar-cobro" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none text-brand-400 font-semibold border border-dark-600" placeholder="Ej. 4500">
                                     </div>
                                     <div>
-                                        <label class="text-[10px] uppercase font-bold text-emerald-500 mb-1 block">Recibe (CUP)</label>
-                                        <input type="number" id="tar-entrega" class="w-full rounded-xl px-4 py-3 outline-none text-emerald-400 font-semibold" placeholder="Ej. 10600">
+                                        <label class="text-[11px] uppercase font-bold text-emerald-500 mb-2 block">Recibe (CUP)</label>
+                                        <input type="number" id="tar-entrega" class="w-full rounded-xl px-4 py-3 md:py-4 outline-none text-emerald-400 font-semibold border border-dark-600" placeholder="Ej. 10600">
                                     </div>
                                 </div>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="window.app.saveTarjeta()" class="flex-1 bg-brand-500 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">Guardar</button>
-                                <button onclick="window.app.resetTarForm()" class="flex-1 bg-dark-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform" id="btn-cancel-tar">Cancelar</button>
+                                <button onclick="window.app.saveTarjeta()" class="flex-1 bg-brand-500 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform text-sm md:text-base">Guardar</button>
+                                <button onclick="window.app.resetTarForm()" class="flex-1 bg-dark-600 text-white py-3 md:py-4 rounded-xl font-bold active:scale-95 transition-transform hidden text-sm md:text-base" id="btn-cancel-tar">Cancelar</button>
                             </div>
                         </div>
                     </div>
-                    <div id="tar-list" class="space-y-3"></div>
+                    <div id="tar-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4"></div>
                 </section>
 
                 <!-- VISTA: BALANCE -->
                 <section id="view-balance" class="view-section">
                     <div class="flex justify-between items-end mb-6 pl-1 pr-1">
-                        <h1 class="text-2xl font-bold text-white">Balances</h1>
-                        <button id="btn-cierre-semanal" onclick="window.app.cierreSemanal()" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm shadow-lg shadow-red-500/20">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">Balances</h1>
+                        <button id="btn-cierre-semanal" onclick="window.app.cierreSemanal()" class="bg-red-500 text-white px-4 md:px-5 py-2 md:py-3 rounded-xl font-bold active:scale-95 transition-transform flex items-center gap-2 text-sm md:text-base shadow-lg shadow-red-500/20">
                             <i class="ph-bold ph-lock-key"></i> Cerrar Semana
                         </button>
                     </div>
                     
-                    <div class="mb-6">
+                    <div class="mb-8">
                         <div class="flex justify-between items-center mb-3 pl-1">
-                            <h3 class="text-brand-400 font-bold text-sm uppercase tracking-widest"><i class="ph-fill ph-calendar-blank mr-1"></i> Semana Actual</h3>
-                            <button onclick="window.app.exportGlobalBalance()" class="text-xs font-bold text-slate-300 bg-dark-700 px-3 py-1.5 rounded-lg hover:bg-dark-600"><i class="ph-bold ph-export mr-1"></i> Exportar</button>
+                            <h3 class="text-brand-400 font-bold text-sm md:text-base uppercase tracking-widest"><i class="ph-fill ph-calendar-blank mr-1"></i> Semana Actual</h3>
+                            <button onclick="window.app.exportGlobalBalance()" class="text-xs md:text-sm font-bold text-slate-300 bg-dark-700 px-3 py-1.5 rounded-lg hover:bg-dark-600 transition-colors"><i class="ph-bold ph-export mr-1"></i> Exportar</button>
                         </div>
                         <div class="bg-dark-800 rounded-3xl border border-dark-600 overflow-hidden">
                             <div id="balance-list" class="divide-y divide-dark-600"></div>
@@ -387,18 +398,18 @@
                     </div>
 
                     <div>
-                        <h3 class="text-slate-400 font-bold mb-3 pl-1 text-sm uppercase tracking-widest"><i class="ph-fill ph-books mr-1"></i> Archivo Histórico</h3>
+                        <h3 class="text-slate-400 font-bold mb-3 pl-1 text-sm md:text-base uppercase tracking-widest"><i class="ph-fill ph-books mr-1"></i> Archivo Histórico</h3>
                         <div id="historial-acordeon" class="space-y-3"></div>
                     </div>
                 </section>
 
                 <!-- VISTA: AJUSTES -->
                 <section id="view-ajustes" class="view-section">
-                    <h1 class="text-2xl font-bold text-white mb-6 pl-1">Ajustes</h1>
-                    <div class="bg-dark-800 p-8 rounded-3xl border border-dark-600 text-center text-slate-500 mt-10">
-                        <i class="ph-fill ph-gear-six text-6xl mb-4 inline-block opacity-50"></i>
-                        <h2 class="text-lg font-bold text-slate-300 mb-2">Configuración General</h2>
-                        <p class="text-sm">Opciones reservadas para futuras actualizaciones.</p>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white mb-6 pl-1">Ajustes</h1>
+                    <div class="bg-dark-800 p-12 rounded-3xl border border-dark-600 text-center text-slate-500 max-w-lg mx-auto mt-10">
+                        <i class="ph-fill ph-gear-six text-6xl mb-6 inline-block opacity-50"></i>
+                        <h2 class="text-xl font-bold text-slate-300 mb-3">Configuración General</h2>
+                        <p class="text-sm md:text-base">Módulo reservado para opciones de configuración de perfil, seguridad y preferencias en futuras actualizaciones.</p>
                     </div>
                 </section>
 
@@ -406,8 +417,8 @@
         </main>
     </div>
 
-    <!-- DOCK MÓVIL (Solo visible en pantallas pequeñas md:hidden) -->
-    <nav class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 ios-dock rounded-[2rem] px-2 py-2 z-50 flex items-center justify-between w-[95%] max-w-[440px] shadow-2xl">
+    <!-- DOCK MÓVIL (Controlado por CSS Nativo para nunca fallar) -->
+    <nav class="mobile-dock fixed bottom-6 left-1/2 -translate-x-1/2 ios-dock rounded-[2rem] px-2 py-2 z-50 items-center justify-between w-[95%] max-w-[440px] shadow-2xl">
         <button onclick="window.app.navigate('dashboard')" data-nav="dashboard" class="nav-item active flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-slate-400 relative">
             <i class="ph-fill ph-house text-[22px]"></i>
             <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
@@ -421,7 +432,7 @@
             <div class="active-dot absolute bottom-0 sm:bottom-1 w-1 h-1 rounded-full bg-brand-400"></div>
         </button>
         
-        <!-- OPERAR EN EL CENTRO EXACTO -->
+        <!-- OPERAR CENTRO -->
         <div class="relative w-12 h-10 sm:w-14 sm:h-12 flex justify-center mx-1">
             <button onclick="window.app.navigate('operar')" data-nav="operar" class="absolute -top-4 sm:-top-5 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-500 text-white shadow-[0_8px_20px_rgba(14,165,233,0.4)] active:scale-95 transition-transform border-[4px] border-[#000000] flex items-center justify-center">
                 <i class="ph-fill ph-lightning text-2xl sm:text-3xl"></i>
@@ -470,8 +481,8 @@
     <script>
         class PanelEnviosApp {
             constructor() {
-                // Usamos v7 para asegurar estado limpio en esta prueba universal
-                this.state = JSON.parse(localStorage.getItem('panel_envios_db_v7')) || {
+                // Instancia v8 limpia para pruebas de servidor
+                this.state = JSON.parse(localStorage.getItem('panel_envios_db_v8')) || {
                     semanaActiva: true,
                     taquilleros: [],
                     proveedores: [],
@@ -479,7 +490,6 @@
                     transacciones: [],
                     historialCierres: {} 
                 };
-                
                 if (typeof this.state.semanaActiva === 'undefined') this.state.semanaActiva = true;
 
                 this.confirmCallback = null;
@@ -495,7 +505,7 @@
             }
 
             saveDB() {
-                localStorage.setItem('panel_envios_db_v7', JSON.stringify(this.state));
+                localStorage.setItem('panel_envios_db_v8', JSON.stringify(this.state));
                 this.renderAll();
             }
 
@@ -589,11 +599,9 @@
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(`view-${viewId}`).classList.add('active');
                 
-                // Actualiza TODOS los botones que apunten a este viewId (tanto dock móvil como sidebar desktop)
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll(`[data-nav="${viewId}"]`).forEach(btn => btn.classList.add('active'));
                 
-                // Scroll top pero del main container
                 const mainEl = document.querySelector('main');
                 if(mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
                 
@@ -960,7 +968,7 @@
 
             // --- RENDERIZADO ---
             renderAll() {
-                const renderCard = (html) => `<div class="bg-dark-800 p-4 rounded-3xl border border-dark-600 flex justify-between items-center shadow-md">${html}</div>`;
+                const renderCard = (html) => `<div class="bg-dark-800 p-4 md:p-6 rounded-3xl border border-dark-600 flex justify-between items-center shadow-md">${html}</div>`;
 
                 // Semana State
                 const btnStartWk = document.getElementById('dash-start-week');
@@ -986,7 +994,7 @@
                     tt.innerHTML += renderCard(`
                         <div class="flex-1">
                             <h4 class="font-bold text-white text-lg">${t.nombre}</h4>
-                            <div class="flex flex-col gap-0.5 mb-1 text-xs">
+                            <div class="flex flex-col gap-0.5 mb-1 text-xs md:text-sm">
                                 <span class="text-brand-400 font-semibold">Deuda: ${deuda.toLocaleString('es-ES')} GYD</span>
                                 <span class="text-emerald-500">Ganancia: +${ganancia.toLocaleString('es-ES')} GYD</span>
                             </div>
@@ -1010,11 +1018,11 @@
                     const pagada = ops.filter(t => t.tipo === 'pago_prov').reduce((s, o) => s + o.montoPago, 0);
                     const deudaReal = generada - pagada;
 
-                    pt.innerHTML += `<div class="bg-dark-800 p-4 rounded-3xl border border-dark-600 mb-3 shadow-md">
+                    pt.innerHTML += `<div class="bg-dark-800 p-4 md:p-6 rounded-3xl border border-dark-600 mb-3 md:mb-4 shadow-md">
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <h4 class="font-bold text-white text-lg">${p.nombre}</h4>
-                                <p class="text-xs text-brand-400 font-semibold">Deuda: $${deudaReal.toFixed(2)} USDT</p>
+                                <p class="text-xs md:text-sm text-brand-400 font-semibold">Deuda: $${deudaReal.toFixed(2)} USDT</p>
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="window.app.saldarDeudaProveedor('${p.id}')" class="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 hover:bg-emerald-500/30" title="Saldar Deuda"><i class="ph-bold ph-check text-lg"></i></button>
@@ -1031,7 +1039,7 @@
 
                 // Tarjetas
                 const tarT = document.getElementById('tar-list');
-                tarT.innerHTML = this.state.tarjetas.length ? '' : '<p class="text-slate-500 text-center py-4 text-sm">Catálogo vacío</p>';
+                tarT.innerHTML = this.state.tarjetas.length ? '' : '<p class="text-slate-500 text-center py-4 text-sm col-span-full">Catálogo vacío</p>';
                 this.state.tarjetas.forEach(t => {
                     const ganancia = t.monto - t.cobro;
                     tarT.innerHTML += renderCard(`
@@ -1084,7 +1092,7 @@
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[10px] text-slate-500 uppercase tracking-wider truncate">${p.nombre}</p>
-                                    <p class="font-bold text-white text-base">${p.tasa} <span class="text-[10px] text-slate-400 font-normal">CUP/USDT</span></p>
+                                    <p class="font-bold text-white text-sm">${p.tasa} <span class="text-[10px] text-slate-400 font-normal">CUP/USDT</span></p>
                                 </div>
                             </div>
                         `;
@@ -1103,34 +1111,34 @@
                 const renderRow = (op, isDash) => {
                     if (op.tipo === 'pago_prov') {
                         return `
-                            <div class="p-4 flex items-center justify-between bg-emerald-900/10">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm"><i class="ph-bold ph-check text-lg"></i></div>
+                            <div class="p-4 md:p-5 flex items-center justify-between bg-emerald-900/10">
+                                <div class="flex items-center gap-3 md:gap-4">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm"><i class="ph-bold ph-check text-lg"></i></div>
                                     <div>
-                                        <h4 class="font-bold text-white text-sm">Pago de Deuda</h4>
-                                        <p class="text-[10px] text-slate-500">${op.fechaStr} • ${op.proveedor}</p>
+                                        <h4 class="font-bold text-white text-sm md:text-base">Pago de Deuda</h4>
+                                        <p class="text-[10px] md:text-xs text-slate-500">${op.fechaStr} • ${op.proveedor}</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-bold text-emerald-400 text-sm">-$${op.montoPago.toFixed(2)}</p>
+                                    <p class="font-bold text-emerald-400 text-sm md:text-base">-$${op.montoPago.toFixed(2)}</p>
                                     <p class="text-[10px] text-slate-500 uppercase">${op.hora}</p>
                                 </div>
                             </div>
                         `;
                     }
                     return `
-                        <div class="p-4 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-dark-700 text-slate-300 flex items-center justify-center font-bold text-sm">${op.taquillero.charAt(0)}</div>
+                        <div class="p-4 md:p-5 flex items-center justify-between">
+                            <div class="flex items-center gap-3 md:gap-4">
+                                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-dark-700 text-slate-300 flex items-center justify-center font-bold text-sm md:text-base">${op.taquillero.charAt(0)}</div>
                                 <div>
-                                    <h4 class="font-bold text-white text-sm">${op.taquillero}</h4>
-                                    <p class="text-[10px] text-slate-500">${isDash ? 'Adquirió Tarjeta' : op.fechaStr} <span class="text-brand-400 font-bold ml-1">${op.tarjeta}</span></p>
+                                    <h4 class="font-bold text-white text-sm md:text-base">${op.taquillero}</h4>
+                                    <p class="text-[10px] md:text-xs text-slate-500">${isDash ? 'Adquirió Tarjeta' : op.fechaStr} <span class="text-brand-400 font-bold ml-1">${op.tarjeta}</span></p>
                                 </div>
                             </div>
                             <div class="text-right">
                                 ${isDash ? `<p class="text-xs text-slate-400">${op.hora}</p>` : `
-                                    <p class="font-bold text-emerald-400 text-sm">+${op.cupEntregado.toLocaleString('es-ES')}</p>
-                                    <p class="text-[10px] text-slate-500 uppercase tracking-wide">Deuda: ${op.deudaGYD.toLocaleString('es-ES')}</p>
+                                    <p class="font-bold text-emerald-400 text-sm md:text-base">+${op.cupEntregado.toLocaleString('es-ES')}</p>
+                                    <p class="text-[10px] md:text-xs text-slate-500 uppercase tracking-wide">Deuda: ${op.deudaGYD.toLocaleString('es-ES')}</p>
                                 `}
                             </div>
                         </div>
@@ -1168,21 +1176,21 @@
                                     <div class="flex justify-between items-end">
                                         <div>
                                             <p class="text-white font-bold text-sm">${cierre.operaciones.length} Ops.</p>
-                                            <p class="text-[10px] text-slate-500">${cierre.fechaCierre} a las ${cierre.horaCierre}</p>
+                                            <p class="text-[10px] md:text-xs text-slate-500">${cierre.fechaCierre} a las ${cierre.horaCierre}</p>
                                         </div>
-                                        <span class="text-emerald-400 font-bold text-sm">${totalCUP.toLocaleString('es-ES')} CUP</span>
+                                        <span class="text-emerald-400 font-bold text-sm md:text-base">${totalCUP.toLocaleString('es-ES')} CUP</span>
                                     </div>
                                 </div>
                             `;
                         });
 
                         histContainer.innerHTML += `
-                            <div class="bg-dark-800 rounded-2xl border border-dark-600 overflow-hidden shadow-md">
-                                <button onclick="window.app.toggleAccordion('${mesKey}')" class="w-full p-4 flex justify-between items-center text-left hover:bg-dark-700/50 transition-colors">
+                            <div class="bg-dark-800 rounded-2xl md:rounded-3xl border border-dark-600 overflow-hidden shadow-md">
+                                <button onclick="window.app.toggleAccordion('${mesKey}')" class="w-full p-4 md:p-6 flex justify-between items-center text-left hover:bg-dark-700/50 transition-colors">
                                     <span class="font-bold text-white uppercase text-xs tracking-wider">${nombreMes}</span>
                                     <i id="acc-icon-${mesKey}" class="ph-bold ph-caret-down text-slate-400 accordion-icon"></i>
                                 </button>
-                                <div id="acc-content-${mesKey}" class="accordion-content px-4 pb-2">
+                                <div id="acc-content-${mesKey}" class="accordion-content px-4 md:px-6 pb-2 md:pb-4">
                                     ${cierresHtml}
                                 </div>
                             </div>
